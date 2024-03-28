@@ -22,21 +22,26 @@ func WriteJsonResponse(w http.ResponseWriter, statusCode int, data any) {
 	}
 }
 
-func (s *Server) Run() error{
+func (s *Server) Run() error {
 	router := http.NewServeMux()
 
-	router.HandleFunc("/", NotFound)
-	router.HandleFunc("GET /stash", getStashHandler)
+	router.HandleFunc("/", s.NotFound)
+	router.HandleFunc("GET /stash", s.getStashHandler)
 
 	log.Println("Startin API on", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
-  return err
+	return err
 }
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
+func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
 	WriteJsonResponse(w, http.StatusNotFound, map[string]string{"error": "not a valid api path"})
 }
 
-func getStashHandler(w http.ResponseWriter, r *http.Request) {
-
+func (s *Server) getStashHandler(w http.ResponseWriter, r *http.Request) {
+	stashes, err := s.Database.GetPublicStashes()
+	if err != nil {
+		WriteJsonResponse(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	WriteJsonResponse(w, http.StatusOK, stashes)
 }
