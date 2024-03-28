@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"time"
+	"log"
+
+	"github.com/ary82/urlStash/api"
+	"github.com/ary82/urlStash/database"
 )
 
-func greet(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World! %s", time.Now())
-}
-
 func main() {
-	http.HandleFunc("/", greet)
-	http.ListenAndServe(":8080", nil)
+	dbConnStr := "postgres://ary:123@localhost:5431/urlStash"
+	database, err := database.Connect(dbConnStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server := api.Server{Addr: ":8080", Database: database}
+	err = server.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
