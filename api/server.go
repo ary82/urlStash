@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ary82/urlStash/database"
+	"github.com/ary82/urlStash/middleware"
 )
 
 type Server struct {
@@ -24,12 +25,16 @@ func WriteJsonResponse(w http.ResponseWriter, statusCode int, data any) {
 
 func (s *Server) Run() error {
 	router := http.NewServeMux()
+	serve := &http.Server{
+		Addr:    s.Addr,
+		Handler: middleware.Logger(router),
+	}
 
 	router.HandleFunc("/", s.NotFound)
 	router.HandleFunc("GET /stash", s.getStashHandler)
 
 	log.Println("Startin API on", s.Addr)
-	err := http.ListenAndServe(s.Addr, router)
+	err := serve.ListenAndServe()
 	return err
 }
 
